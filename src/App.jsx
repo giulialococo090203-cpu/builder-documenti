@@ -194,34 +194,33 @@ function App() {
     if (cellaSelezionata.bloccoId !== bloccoId) return;
 
     const { rigaIndex, cellaIndex } = cellaSelezionata;
+    let testo = "";
+
+    if (formato === "numero") {
+      testo = "1\n2\n3";
+    }
+
+    if (formato === "numero_punto") {
+      testo = "1.\n2.\n3.";
+    }
+
+    if (formato === "numero_grado") {
+      testo = "1°\n2°\n3°";
+    }
+
+    if (formato === "n_grado") {
+      testo = "n°\nn°\nn°";
+    }
 
     setBlocchi((prev) =>
       prev.map((blocco) => {
         if (blocco.id !== bloccoId) return blocco;
 
         const nuoveRighe = blocco.righe.map((riga, i) => {
-          if (i === 0) return riga;
-          if (i < rigaIndex) return riga;
+          if (i !== rigaIndex) return riga;
 
           const nuovaRiga = [...riga];
-          const numero = i - rigaIndex + 1;
-
-          if (formato === "numero") {
-            nuovaRiga[cellaIndex] = String(numero);
-          }
-
-          if (formato === "numero_punto") {
-            nuovaRiga[cellaIndex] = `${numero}.`;
-          }
-
-          if (formato === "numero_grado") {
-            nuovaRiga[cellaIndex] = `${numero}°`;
-          }
-
-          if (formato === "n_grado") {
-            nuovaRiga[cellaIndex] = "n°";
-          }
-
+          nuovaRiga[cellaIndex] = testo;
           return nuovaRiga;
         });
 
@@ -520,7 +519,7 @@ function App() {
 
                     <div style={{ fontSize: "13px", color: "#666" }}>
                       Clicca prima la cella che vuoi usare, poi scegli il formato.
-                      Il formato verrà applicato anche sotto nella stessa colonna.
+                      I numeri verranno inseriti nella stessa cella, uno sotto l’altro.
                     </div>
                   </div>
 
@@ -535,7 +534,7 @@ function App() {
                       }}
                     >
                       {riga.map((cella, cellaIndex) => (
-                        <input
+                        <textarea
                           key={`${blocco.id}-cella-${rigaIndex}-${cellaIndex}`}
                           value={cella}
                           onClick={() =>
@@ -550,6 +549,8 @@ function App() {
                             )
                           }
                           style={{
+                            minHeight: "54px",
+                            resize: "vertical",
                             background: cellaAttiva(
                               blocco.id,
                               rigaIndex,
@@ -710,7 +711,10 @@ function App() {
                         {blocco.righe.map((riga, rigaIndex) => (
                           <tr key={`${blocco.id}-tr-${rigaIndex}`}>
                             {riga.map((cella, cellaIndex) => (
-                              <td key={`${blocco.id}-td-${rigaIndex}-${cellaIndex}`}>
+                              <td
+                                key={`${blocco.id}-td-${rigaIndex}-${cellaIndex}`}
+                                style={{ whiteSpace: "pre-line" }}
+                              >
                                 {cella}
                               </td>
                             ))}
