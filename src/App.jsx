@@ -30,6 +30,7 @@ const blocchiIniziali = [
     id: 5,
     tipo: "tabella",
     pagina: 1,
+    quantitaElenco: 3,
     righe: [
       ["CLASSE E SEZIONE", "PIANO", "N. AULA"],
       ["", "", ""],
@@ -84,6 +85,7 @@ function App() {
     if (tipo === "riga") nuovo.etichetta = "NUOVO CAMPO";
     if (tipo === "caselle") nuovo.opzioni = ["OPZIONE 1", "OPZIONE 2"];
     if (tipo === "tabella") {
+      nuovo.quantitaElenco = 3;
       nuovo.righe = [
         ["COLONNA 1", "COLONNA 2"],
         ["", ""],
@@ -193,30 +195,26 @@ function App() {
     if (!cellaSelezionata) return;
     if (cellaSelezionata.bloccoId !== bloccoId) return;
 
+    const blocco = blocchi.find((b) => b.id === bloccoId);
+    const quantita = Math.max(1, Number(blocco?.quantitaElenco || 3));
     const { rigaIndex, cellaIndex } = cellaSelezionata;
-    let testo = "";
 
-    if (formato === "numero") {
-      testo = "1 __________\n2 __________\n3 __________";
+    let righe = [];
+
+    for (let i = 1; i <= quantita; i += 1) {
+      if (formato === "numero") righe.push(`${i} __________`);
+      if (formato === "numero_punto") righe.push(`${i}. __________`);
+      if (formato === "numero_grado") righe.push(`${i}° __________`);
+      if (formato === "n_grado") righe.push(`n° __________`);
     }
 
-    if (formato === "numero_punto") {
-      testo = "1. __________\n2. __________\n3. __________";
-    }
-
-    if (formato === "numero_grado") {
-      testo = "1° __________\n2° __________\n3° __________";
-    }
-
-    if (formato === "n_grado") {
-      testo = "n° __________\nn° __________\nn° __________";
-    }
+    const testo = righe.join("\n");
 
     setBlocchi((prev) =>
-      prev.map((blocco) => {
-        if (blocco.id !== bloccoId) return blocco;
+      prev.map((bloccoItem) => {
+        if (bloccoItem.id !== bloccoId) return bloccoItem;
 
-        const nuoveRighe = blocco.righe.map((riga, i) => {
+        const nuoveRighe = bloccoItem.righe.map((riga, i) => {
           if (i !== rigaIndex) return riga;
 
           const nuovaRiga = [...riga];
@@ -224,7 +222,7 @@ function App() {
           return nuovaRiga;
         });
 
-        return { ...blocco, righe: nuoveRighe };
+        return { ...bloccoItem, righe: nuoveRighe };
       })
     );
   }
@@ -256,6 +254,64 @@ function App() {
       cellaSelezionata.bloccoId === bloccoId &&
       cellaSelezionata.rigaIndex === rigaIndex &&
       cellaSelezionata.cellaIndex === cellaIndex
+    );
+  }
+
+  function renderContenutoCella(cella) {
+    if (typeof cella !== "string" || !cella.includes("\n")) {
+      const lineaMatch = typeof cella === "string" ? cella.match(/^(.*?)(?:\s*_+)\s*$/) : null;
+
+      if (lineaMatch) {
+        const etichetta = lineaMatch[1].trim();
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>
+            <span style={{ whiteSpace: "nowrap" }}>{etichetta}</span>
+            <span style={{ flex: 1, borderBottom: "1px solid #111", height: "12px" }} />
+          </div>
+        );
+      }
+
+      return cella;
+    }
+
+    const righe = cella.split("\n");
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        {righe.map((riga, index) => {
+          const match = riga.match(/^(.*?)(?:\s*_+)\s*$/);
+
+          if (match) {
+            const etichetta = match[1].trim();
+            return (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  width: "100%",
+                }}
+              >
+                <span style={{ whiteSpace: "nowrap" }}>{etichetta}</span>
+                <span
+                  style={{
+                    flex: 1,
+                    borderBottom: "1px solid #111",
+                    height: "12px",
+                  }}
+                />
+              </div>
+            );
+          }
+
+          return (
+            <div key={index} style={{ whiteSpace: "pre-line" }}>
+              {riga}
+            </div>
+          );
+        })}
+      </div>
     );
   }
 
@@ -476,6 +532,23 @@ function App() {
                       Formati facili
                     </div>
 
+                    <label style={{ marginBottom: "6px", display: "block" }}>
+                      Quante righe vuoi inserire
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={blocco.quantitaElenco || 3}
+                      onChange={(e) =>
+                        aggiornaBlocco(
+                          blocco.id,
+                          "quantitaElenco",
+                          Number(e.target.value) || 1
+                        )
+                      }
+                      style={{ marginBottom: "10px" }}
+                    />
+
                     <div
                       style={{
                         display: "flex",
@@ -519,7 +592,7 @@ function App() {
 
                     <div style={{ fontSize: "13px", color: "#666" }}>
                       Clicca prima la cella che vuoi usare, poi scegli il formato.
-                      Gli spazi da compilare verranno aggiunti automaticamente.
+                      Le righe si adattano alla larghezza della cella.
                     </div>
                   </div>
 
@@ -711,11 +784,8 @@ function App() {
                         {blocco.righe.map((riga, rigaIndex) => (
                           <tr key={`${blocco.id}-tr-${rigaIndex}`}>
                             {riga.map((cella, cellaIndex) => (
-                              <td
-                                key={`${blocco.id}-td-${rigaIndex}-${cellaIndex}`}
-                                style={{ whiteSpace: "pre-line" }}
-                              >
-                                {cella}
+                              <td key={`${blocco.id}-td-${rigaIndex}-${cellaIndex}`}>
+                                {renderContenutoCella(cella)}
                               </td>
                             ))}
                           </tr>
