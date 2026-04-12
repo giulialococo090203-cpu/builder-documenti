@@ -167,6 +167,52 @@ function App() {
     );
   }
 
+  function applicaNumerazionePrimaColonna(bloccoId, formato) {
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.id !== bloccoId) return blocco;
+
+        const nuoveRighe = blocco.righe.map((riga, index) => {
+          if (index === 0) return riga;
+
+          const nuovaRiga = [...riga];
+
+          if (formato === "numero") {
+            nuovaRiga[0] = "{n}";
+          }
+
+          if (formato === "numero_punto") {
+            nuovaRiga[0] = "{n.}";
+          }
+
+          if (formato === "numero_grado") {
+            nuovaRiga[0] = "{n°}";
+          }
+
+          return nuovaRiga;
+        });
+
+        return { ...blocco, righe: nuoveRighe };
+      })
+    );
+  }
+
+  function impostaIntestazionePrimaColonna(bloccoId, testo) {
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.id !== bloccoId) return blocco;
+        if (!blocco.righe.length) return blocco;
+
+        const nuoveRighe = [...blocco.righe];
+        const primaRiga = [...nuoveRighe[0]];
+        primaRiga[0] = testo;
+        nuoveRighe[0] = primaRiga;
+
+        return { ...blocco, righe: nuoveRighe };
+      })
+    );
+  }
+
   function aggiungiPagina() {
     setNumeroPagine((prev) => prev + 1);
   }
@@ -186,6 +232,15 @@ function App() {
 
   function stampa() {
     window.print();
+  }
+
+  function renderCellaTabella(cella, rigaIndex) {
+    if (typeof cella !== "string") return cella;
+
+    return cella
+      .replaceAll("{n}", String(rigaIndex))
+      .replaceAll("{n.}", `${rigaIndex}.`)
+      .replaceAll("{n°}", `${rigaIndex}°`);
   }
 
   const pagine = Array.from({ length: numeroPagine }, (_, i) => i + 1);
@@ -332,10 +387,7 @@ function App() {
                       aggiornaBlocco(
                         blocco.id,
                         "opzioni",
-                        e.target.value
-                          .split("\n")
-                          .map((riga) => riga.trim())
-                          .filter(Boolean)
+                        e.target.value.split("\n").filter(Boolean)
                       )
                     }
                   />
@@ -345,6 +397,81 @@ function App() {
               {blocco.tipo === "tabella" && (
                 <>
                   <label>Tabella</label>
+
+                  <div
+                    style={{
+                      marginBottom: "12px",
+                      padding: "10px",
+                      border: "1px solid #ddd",
+                      borderRadius: "10px",
+                      background: "#f8f8f8",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: "600",
+                        marginBottom: "8px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Aiuto numerazione semplice
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          impostaIntestazionePrimaColonna(blocco.id, "n°")
+                        }
+                      >
+                        Intestazione prima colonna = n°
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          applicaNumerazionePrimaColonna(blocco.id, "numero")
+                        }
+                      >
+                        Prima colonna = 1, 2, 3
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          applicaNumerazionePrimaColonna(
+                            blocco.id,
+                            "numero_punto"
+                          )
+                        }
+                      >
+                        Prima colonna = 1., 2., 3.
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          applicaNumerazionePrimaColonna(
+                            blocco.id,
+                            "numero_grado"
+                          )
+                        }
+                      >
+                        Prima colonna = 1°, 2°, 3°
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: "13px", color: "#666" }}>
+                      Usa questi pulsanti senza dover scrivere codici manuali.
+                    </div>
+                  </div>
 
                   {blocco.righe.map((riga, rigaIndex) => (
                     <div
@@ -512,7 +639,9 @@ function App() {
                           <tr key={`${blocco.id}-tr-${rigaIndex}`}>
                             {riga.map((cella, cellaIndex) => (
                               <td key={`${blocco.id}-td-${rigaIndex}-${cellaIndex}`}>
-                                {cella}
+                                {rigaIndex === 0
+                                  ? cella
+                                  : renderCellaTabella(cella, rigaIndex)}
                               </td>
                             ))}
                           </tr>
