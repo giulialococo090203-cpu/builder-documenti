@@ -33,6 +33,8 @@ const blocchiIniziali = [
     righe: [
       ["CLASSE E SEZIONE", "PIANO", "N. AULA"],
       ["", "", ""],
+      ["", "", ""],
+      ["", "", ""],
     ],
   },
   {
@@ -51,11 +53,24 @@ const blocchiIniziali = [
 
 function App() {
   const [blocchi, setBlocchi] = useState(blocchiIniziali);
-  const [titoloDocumento, setTitoloDocumento] = useState(
-    "ISTITUTO COMPRENSIVO MICHELANGELO BUONARROTI"
-  );
   const [numeroPagine, setNumeroPagine] = useState(1);
   const [cellaSelezionata, setCellaSelezionata] = useState(null);
+
+  const [intestazione, setIntestazione] = useState({
+    nomeScuola: "ISTITUTO COMPRENSIVO MICHELANGELO BUONARROTI",
+    indirizzo: "Via Tembien 1",
+    cittaCap: "90135 Palermo",
+    codiceFiscale: "Codice fiscale 80026500829",
+    telefono: "Tel. 091221001",
+    email: "PAIC87100X@ISTRUZIONE.IT",
+  });
+
+  function aggiornaIntestazione(campo, valore) {
+    setIntestazione((prev) => ({
+      ...prev,
+      [campo]: valore,
+    }));
+  }
 
   function aggiungiBlocco(tipo) {
     const nuovo = {
@@ -71,6 +86,8 @@ function App() {
     if (tipo === "tabella") {
       nuovo.righe = [
         ["COLONNA 1", "COLONNA 2"],
+        ["", ""],
+        ["", ""],
         ["", ""],
       ];
     }
@@ -183,14 +200,27 @@ function App() {
         if (blocco.id !== bloccoId) return blocco;
 
         const nuoveRighe = blocco.righe.map((riga, i) => {
-          if (i !== rigaIndex) return riga;
+          if (i === 0) return riga;
+          if (i < rigaIndex) return riga;
 
           const nuovaRiga = [...riga];
+          const numero = i - rigaIndex + 1;
 
-          if (formato === "numero") nuovaRiga[cellaIndex] = "{n}";
-          if (formato === "numero_punto") nuovaRiga[cellaIndex] = "{n.}";
-          if (formato === "numero_grado") nuovaRiga[cellaIndex] = "{n°}";
-          if (formato === "n_grado") nuovaRiga[cellaIndex] = "n°";
+          if (formato === "numero") {
+            nuovaRiga[cellaIndex] = String(numero);
+          }
+
+          if (formato === "numero_punto") {
+            nuovaRiga[cellaIndex] = `${numero}.`;
+          }
+
+          if (formato === "numero_grado") {
+            nuovaRiga[cellaIndex] = `${numero}°`;
+          }
+
+          if (formato === "n_grado") {
+            nuovaRiga[cellaIndex] = "n°";
+          }
 
           return nuovaRiga;
         });
@@ -221,15 +251,6 @@ function App() {
     window.print();
   }
 
-  function renderCellaTabella(cella, rigaIndex) {
-    if (typeof cella !== "string") return cella;
-
-    return cella
-      .replaceAll("{n}", String(rigaIndex))
-      .replaceAll("{n.}", `${rigaIndex}.`)
-      .replaceAll("{n°}", `${rigaIndex}°`);
-  }
-
   function cellaAttiva(bloccoId, rigaIndex, cellaIndex) {
     return (
       cellaSelezionata &&
@@ -250,11 +271,54 @@ function App() {
         </p>
 
         <div className="sezione">
-          <label className="label-sezione">Nome scuola / intestazione</label>
+          <div className="label-sezione">Intestazione documento</div>
+
+          <label>Nome scuola</label>
           <input
-            value={titoloDocumento}
-            onChange={(e) => setTitoloDocumento(e.target.value)}
+            value={intestazione.nomeScuola}
+            onChange={(e) => aggiornaIntestazione("nomeScuola", e.target.value)}
             placeholder="Nome scuola"
+          />
+
+          <label style={{ marginTop: "10px", display: "block" }}>Indirizzo</label>
+          <input
+            value={intestazione.indirizzo}
+            onChange={(e) => aggiornaIntestazione("indirizzo", e.target.value)}
+            placeholder="Via / Piazza"
+          />
+
+          <label style={{ marginTop: "10px", display: "block" }}>
+            CAP e città
+          </label>
+          <input
+            value={intestazione.cittaCap}
+            onChange={(e) => aggiornaIntestazione("cittaCap", e.target.value)}
+            placeholder="CAP e città"
+          />
+
+          <label style={{ marginTop: "10px", display: "block" }}>
+            Codice fiscale
+          </label>
+          <input
+            value={intestazione.codiceFiscale}
+            onChange={(e) =>
+              aggiornaIntestazione("codiceFiscale", e.target.value)
+            }
+            placeholder="Codice fiscale..."
+          />
+
+          <label style={{ marginTop: "10px", display: "block" }}>Telefono</label>
+          <input
+            value={intestazione.telefono}
+            onChange={(e) => aggiornaIntestazione("telefono", e.target.value)}
+            placeholder="Tel. ..."
+          />
+
+          <label style={{ marginTop: "10px", display: "block" }}>Email</label>
+          <input
+            value={intestazione.email}
+            onChange={(e) => aggiornaIntestazione("email", e.target.value)}
+            placeholder="Email..."
           />
         </div>
 
@@ -455,8 +519,8 @@ function App() {
                     </div>
 
                     <div style={{ fontSize: "13px", color: "#666" }}>
-                      Clicca prima la cella che vuoi trasformare, poi scegli il
-                      formato.
+                      Clicca prima la cella che vuoi usare, poi scegli il formato.
+                      Il formato verrà applicato anche sotto nella stessa colonna.
                     </div>
                   </div>
 
@@ -588,11 +652,13 @@ function App() {
         {pagine.map((pagina) => (
           <div key={pagina} className="foglio">
             <div className="intestazione">
-              <div className="nome-scuola">{titoloDocumento}</div>
-              <div className="riga-piccola">Via Tembien 1 - 90135 Palermo</div>
-              <div className="riga-piccola">Codice fiscale 80026500829</div>
+              <div className="nome-scuola">{intestazione.nomeScuola}</div>
               <div className="riga-piccola">
-                Tel. 091221001 - PAIC87100X@ISTRUZIONE.IT
+                {intestazione.indirizzo} - {intestazione.cittaCap}
+              </div>
+              <div className="riga-piccola">{intestazione.codiceFiscale}</div>
+              <div className="riga-piccola">
+                {intestazione.telefono} - {intestazione.email}
               </div>
             </div>
 
@@ -645,9 +711,7 @@ function App() {
                           <tr key={`${blocco.id}-tr-${rigaIndex}`}>
                             {riga.map((cella, cellaIndex) => (
                               <td key={`${blocco.id}-td-${rigaIndex}-${cellaIndex}`}>
-                                {rigaIndex === 0
-                                  ? cella
-                                  : renderCellaTabella(cella, rigaIndex)}
+                                {cella}
                               </td>
                             ))}
                           </tr>
