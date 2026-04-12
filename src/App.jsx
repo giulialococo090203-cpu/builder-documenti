@@ -199,13 +199,13 @@ function App() {
     const quantita = Math.max(1, Number(blocco?.quantitaElenco || 3));
     const { rigaIndex, cellaIndex } = cellaSelezionata;
 
-    let righe = [];
+    const righe = [];
 
     for (let i = 1; i <= quantita; i += 1) {
-      if (formato === "numero") righe.push(`${i} __________`);
-      if (formato === "numero_punto") righe.push(`${i}. __________`);
-      if (formato === "numero_grado") righe.push(`${i}° __________`);
-      if (formato === "n_grado") righe.push(`n° __________`);
+      if (formato === "numero") righe.push(`${i}`);
+      if (formato === "numero_punto") righe.push(`${i}.`);
+      if (formato === "numero_grado") righe.push(`${i}°`);
+      if (formato === "n_grado") righe.push("n°");
     }
 
     const testo = righe.join("\n");
@@ -223,6 +223,41 @@ function App() {
         });
 
         return { ...bloccoItem, righe: nuoveRighe };
+      })
+    );
+  }
+
+  function aggiungiRigheAccanto(bloccoId) {
+    if (!cellaSelezionata) return;
+    if (cellaSelezionata.bloccoId !== bloccoId) return;
+
+    const { rigaIndex, cellaIndex } = cellaSelezionata;
+
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.id !== bloccoId) return blocco;
+
+        const nuoveRighe = blocco.righe.map((riga, i) => {
+          if (i !== rigaIndex) return riga;
+
+          const nuovaRiga = [...riga];
+          const valoreAttuale = String(nuovaRiga[cellaIndex] || "");
+          const righeTesto = valoreAttuale.split("\n");
+
+          const righeAggiornate = righeTesto.map((rigaTesto) => {
+            const pulita = rigaTesto.trim();
+
+            if (!pulita) return "__________";
+            if (pulita.includes("__________")) return pulita;
+
+            return `${pulita} __________`;
+          });
+
+          nuovaRiga[cellaIndex] = righeAggiornate.join("\n");
+          return nuovaRiga;
+        });
+
+        return { ...blocco, righe: nuoveRighe };
       })
     );
   }
@@ -259,14 +294,28 @@ function App() {
 
   function renderContenutoCella(cella) {
     if (typeof cella !== "string" || !cella.includes("\n")) {
-      const lineaMatch = typeof cella === "string" ? cella.match(/^(.*?)(?:\s*_+)\s*$/) : null;
+      const lineaMatch =
+        typeof cella === "string" ? cella.match(/^(.*?)(?:\s*_+)\s*$/) : null;
 
       if (lineaMatch) {
         const etichetta = lineaMatch[1].trim();
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              width: "100%",
+            }}
+          >
             <span style={{ whiteSpace: "nowrap" }}>{etichetta}</span>
-            <span style={{ flex: 1, borderBottom: "1px solid #111", height: "12px" }} />
+            <span
+              style={{
+                flex: 1,
+                borderBottom: "1px solid #111",
+                height: "12px",
+              }}
+            />
           </div>
         );
       }
@@ -588,11 +637,18 @@ function App() {
                       >
                         1° 2° 3°
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => aggiungiRigheAccanto(blocco.id)}
+                      >
+                        + Aggiungi righe accanto
+                      </button>
                     </div>
 
                     <div style={{ fontSize: "13px", color: "#666" }}>
-                      Clicca prima la cella che vuoi usare, poi scegli il formato.
-                      Le righe si adattano alla larghezza della cella.
+                      Seleziona una cella, inserisci i numeri o n°, poi premi
+                      “Aggiungi righe accanto”.
                     </div>
                   </div>
 
