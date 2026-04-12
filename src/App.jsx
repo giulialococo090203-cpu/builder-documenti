@@ -197,19 +197,19 @@ function App() {
     let testo = "";
 
     if (formato === "numero") {
-      testo = "1\n2\n3";
+      testo = "1 __________\n2 __________\n3 __________";
     }
 
     if (formato === "numero_punto") {
-      testo = "1.\n2.\n3.";
+      testo = "1. __________\n2. __________\n3. __________";
     }
 
     if (formato === "numero_grado") {
-      testo = "1°\n2°\n3°";
+      testo = "1° __________\n2° __________\n3° __________";
     }
 
     if (formato === "n_grado") {
-      testo = "n°\nn°\nn°";
+      testo = "n° __________\nn° __________\nn° __________";
     }
 
     setBlocchi((prev) =>
@@ -519,7 +519,7 @@ function App() {
 
                     <div style={{ fontSize: "13px", color: "#666" }}>
                       Clicca prima la cella che vuoi usare, poi scegli il formato.
-                      I numeri verranno inseriti nella stessa cella, uno sotto l’altro.
+                      Gli spazi da compilare verranno aggiunti automaticamente.
                     </div>
                   </div>
 
