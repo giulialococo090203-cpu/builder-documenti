@@ -55,6 +55,7 @@ function App() {
     "ISTITUTO COMPRENSIVO MICHELANGELO BUONARROTI"
   );
   const [numeroPagine, setNumeroPagine] = useState(1);
+  const [cellaSelezionata, setCellaSelezionata] = useState(null);
 
   function aggiungiBlocco(tipo) {
     const nuovo = {
@@ -167,46 +168,32 @@ function App() {
     );
   }
 
-  function applicaNumerazionePrimaColonna(bloccoId, formato) {
+  function selezionaCella(bloccoId, rigaIndex, cellaIndex) {
+    setCellaSelezionata({ bloccoId, rigaIndex, cellaIndex });
+  }
+
+  function applicaFormatoCella(bloccoId, formato) {
+    if (!cellaSelezionata) return;
+    if (cellaSelezionata.bloccoId !== bloccoId) return;
+
+    const { rigaIndex, cellaIndex } = cellaSelezionata;
+
     setBlocchi((prev) =>
       prev.map((blocco) => {
         if (blocco.id !== bloccoId) return blocco;
 
-        const nuoveRighe = blocco.righe.map((riga, index) => {
-          if (index === 0) return riga;
+        const nuoveRighe = blocco.righe.map((riga, i) => {
+          if (i !== rigaIndex) return riga;
 
           const nuovaRiga = [...riga];
 
-          if (formato === "numero") {
-            nuovaRiga[0] = "{n}";
-          }
-
-          if (formato === "numero_punto") {
-            nuovaRiga[0] = "{n.}";
-          }
-
-          if (formato === "numero_grado") {
-            nuovaRiga[0] = "{n°}";
-          }
+          if (formato === "numero") nuovaRiga[cellaIndex] = "{n}";
+          if (formato === "numero_punto") nuovaRiga[cellaIndex] = "{n.}";
+          if (formato === "numero_grado") nuovaRiga[cellaIndex] = "{n°}";
+          if (formato === "n_grado") nuovaRiga[cellaIndex] = "n°";
 
           return nuovaRiga;
         });
-
-        return { ...blocco, righe: nuoveRighe };
-      })
-    );
-  }
-
-  function impostaIntestazionePrimaColonna(bloccoId, testo) {
-    setBlocchi((prev) =>
-      prev.map((blocco) => {
-        if (blocco.id !== bloccoId) return blocco;
-        if (!blocco.righe.length) return blocco;
-
-        const nuoveRighe = [...blocco.righe];
-        const primaRiga = [...nuoveRighe[0]];
-        primaRiga[0] = testo;
-        nuoveRighe[0] = primaRiga;
 
         return { ...blocco, righe: nuoveRighe };
       })
@@ -241,6 +228,15 @@ function App() {
       .replaceAll("{n}", String(rigaIndex))
       .replaceAll("{n.}", `${rigaIndex}.`)
       .replaceAll("{n°}", `${rigaIndex}°`);
+  }
+
+  function cellaAttiva(bloccoId, rigaIndex, cellaIndex) {
+    return (
+      cellaSelezionata &&
+      cellaSelezionata.bloccoId === bloccoId &&
+      cellaSelezionata.rigaIndex === rigaIndex &&
+      cellaSelezionata.cellaIndex === cellaIndex
+    );
   }
 
   const pagine = Array.from({ length: numeroPagine }, (_, i) => i + 1);
@@ -414,7 +410,7 @@ function App() {
                         fontSize: "14px",
                       }}
                     >
-                      Aiuto numerazione semplice
+                      Formati facili
                     </div>
 
                     <div
@@ -427,49 +423,40 @@ function App() {
                     >
                       <button
                         type="button"
-                        onClick={() =>
-                          impostaIntestazionePrimaColonna(blocco.id, "n°")
-                        }
+                        onClick={() => applicaFormatoCella(blocco.id, "n_grado")}
                       >
-                        Intestazione prima colonna = n°
+                        n°
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applicaFormatoCella(blocco.id, "numero")}
+                      >
+                        1 2 3
                       </button>
 
                       <button
                         type="button"
                         onClick={() =>
-                          applicaNumerazionePrimaColonna(blocco.id, "numero")
+                          applicaFormatoCella(blocco.id, "numero_punto")
                         }
                       >
-                        Prima colonna = 1, 2, 3
+                        1. 2. 3.
                       </button>
 
                       <button
                         type="button"
                         onClick={() =>
-                          applicaNumerazionePrimaColonna(
-                            blocco.id,
-                            "numero_punto"
-                          )
+                          applicaFormatoCella(blocco.id, "numero_grado")
                         }
                       >
-                        Prima colonna = 1., 2., 3.
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          applicaNumerazionePrimaColonna(
-                            blocco.id,
-                            "numero_grado"
-                          )
-                        }
-                      >
-                        Prima colonna = 1°, 2°, 3°
+                        1° 2° 3°
                       </button>
                     </div>
 
                     <div style={{ fontSize: "13px", color: "#666" }}>
-                      Usa questi pulsanti senza dover scrivere codici manuali.
+                      Clicca prima la cella che vuoi trasformare, poi scegli il
+                      formato.
                     </div>
                   </div>
 
@@ -487,6 +474,9 @@ function App() {
                         <input
                           key={`${blocco.id}-cella-${rigaIndex}-${cellaIndex}`}
                           value={cella}
+                          onClick={() =>
+                            selezionaCella(blocco.id, rigaIndex, cellaIndex)
+                          }
                           onChange={(e) =>
                             aggiornaCellaTabella(
                               blocco.id,
@@ -495,6 +485,22 @@ function App() {
                               e.target.value
                             )
                           }
+                          style={{
+                            background: cellaAttiva(
+                              blocco.id,
+                              rigaIndex,
+                              cellaIndex
+                            )
+                              ? "#e6f0ff"
+                              : "white",
+                            borderColor: cellaAttiva(
+                              blocco.id,
+                              rigaIndex,
+                              cellaIndex
+                            )
+                              ? "#3b82f6"
+                              : "#cfcfcf",
+                          }}
                         />
                       ))}
 
