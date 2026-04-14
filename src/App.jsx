@@ -83,7 +83,7 @@ function App() {
     if (tipo === "titolo") nuovo.testo = "NUOVO TITOLO";
     if (tipo === "testo") nuovo.testo = "Scrivi qui il testo fisso del modulo";
     if (tipo === "riga") nuovo.etichetta = "NUOVO CAMPO";
-    if (tipo === "caselle") nuovo.opzioni = ["OPZIONE 1", "OPZIONE 2"];
+    if (tipo === "caselle") nuovo.opzioni = ["NUOVA CASELLA"];
     if (tipo === "tabella") {
       nuovo.quantitaElenco = 3;
       nuovo.righe = [
@@ -266,6 +266,23 @@ function App() {
     setNumeroPagine((prev) => prev + 1);
   }
 
+  function rimuoviUltimaPagina() {
+    if (numeroPagine <= 1) return;
+
+    const ultimaPagina = numeroPagine;
+
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.pagina === ultimaPagina) {
+          return { ...blocco, pagina: ultimaPagina - 1 };
+        }
+        return blocco;
+      })
+    );
+
+    setNumeroPagine((prev) => prev - 1);
+  }
+
   function spostaBloccoPagina(bloccoId, nuovaPagina) {
     setBlocchi((prev) =>
       prev.map((blocco) =>
@@ -279,7 +296,46 @@ function App() {
     );
   }
 
-  function stampa() {
+  function aggiornaOpzioneCasella(bloccoId, opzioneIndex, valore) {
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.id !== bloccoId) return blocco;
+
+        const nuoveOpzioni = [...blocco.opzioni];
+        nuoveOpzioni[opzioneIndex] = valore;
+
+        return { ...blocco, opzioni: nuoveOpzioni };
+      })
+    );
+  }
+
+  function aggiungiOpzioneCasella(bloccoId) {
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.id !== bloccoId) return blocco;
+        return {
+          ...blocco,
+          opzioni: [...blocco.opzioni, "NUOVA CASELLA"],
+        };
+      })
+    );
+  }
+
+  function eliminaOpzioneCasella(bloccoId, opzioneIndex) {
+    setBlocchi((prev) =>
+      prev.map((blocco) => {
+        if (blocco.id !== bloccoId) return blocco;
+        if (blocco.opzioni.length <= 1) return blocco;
+
+        return {
+          ...blocco,
+          opzioni: blocco.opzioni.filter((_, i) => i !== opzioneIndex),
+        };
+      })
+    );
+  }
+
+  function salvaPdf() {
     window.print();
   }
 
@@ -458,9 +514,18 @@ function App() {
 
         <div className="sezione">
           <div className="label-sezione">Pagine</div>
-          <button type="button" onClick={aggiungiPagina}>
-            + Aggiungi pagina
-          </button>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button type="button" onClick={aggiungiPagina}>
+              + Aggiungi pagina
+            </button>
+            <button
+              type="button"
+              onClick={rimuoviUltimaPagina}
+              disabled={numeroPagine === 1}
+            >
+              − Elimina ultima pagina
+            </button>
+          </div>
           <div style={{ marginTop: "10px", fontSize: "14px", color: "#555" }}>
             Totale pagine: {numeroPagine}
           </div>
@@ -544,17 +609,47 @@ function App() {
 
               {blocco.tipo === "caselle" && (
                 <>
-                  <label>Una opzione per riga</label>
-                  <textarea
-                    value={blocco.opzioni.join("\n")}
-                    onChange={(e) =>
-                      aggiornaBlocco(
-                        blocco.id,
-                        "opzioni",
-                        e.target.value.split("\n").filter(Boolean)
-                      )
-                    }
-                  />
+                  <label>Caselle</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {blocco.opzioni.map((opzione, opzioneIndex) => (
+                      <div
+                        key={`${blocco.id}-opzione-${opzioneIndex}`}
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          value={opzione}
+                          onChange={(e) =>
+                            aggiornaOpzioneCasella(
+                              blocco.id,
+                              opzioneIndex,
+                              e.target.value
+                            )
+                          }
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            eliminaOpzioneCasella(blocco.id, opzioneIndex)
+                          }
+                        >
+                          ❌
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: "10px" }}>
+                    <button
+                      type="button"
+                      onClick={() => aggiungiOpzioneCasella(blocco.id)}
+                    >
+                      + Aggiungi casella
+                    </button>
+                  </div>
                 </>
               )}
 
@@ -773,8 +868,8 @@ function App() {
           ))}
         </div>
 
-        <button type="button" className="bottone-stampa" onClick={stampa}>
-          Stampa modulo
+        <button type="button" className="bottone-stampa" onClick={salvaPdf}>
+          Salva PDF
         </button>
       </aside>
 
@@ -824,7 +919,7 @@ function App() {
                   return (
                     <div key={blocco.id} className="gruppo-caselle">
                       {blocco.opzioni.map((opzione, i) => (
-                        <div key={`${blocco.id}-opzione-${i}`} className="item-casella">
+                        <div key={`${blocco.id}-opzione-preview-${i}`} className="item-casella">
                           <span className="casella" />
                           <span>{opzione}</span>
                         </div>

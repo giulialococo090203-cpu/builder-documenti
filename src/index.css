@@ -23,7 +23,6 @@ select {
   font: inherit;
 }
 
-/* INPUT */
 input,
 textarea,
 select {
@@ -49,7 +48,6 @@ textarea {
   resize: vertical;
 }
 
-/* BOTTONI */
 button {
   border: 1px solid #cbd5e1;
   background: #ffffff;
@@ -67,16 +65,17 @@ button:hover {
   border-color: #6366f1;
 }
 
-/* LAYOUT */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .app {
   display: grid;
   grid-template-columns: 560px 1fr;
   min-height: 100vh;
 }
 
-/* =========================
-   COLONNA SINISTRA COLORATA
-========================= */
 .barra-laterale {
   background: linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
   border-right: 1px solid #cfd8e3;
@@ -97,7 +96,6 @@ button:hover {
   font-size: 16px;
 }
 
-/* SEZIONI SIDEBAR */
 .sezione {
   margin-bottom: 24px;
   padding: 18px;
@@ -115,7 +113,6 @@ button:hover {
   color: #1f2937;
 }
 
-/* BOTTONI AGGIUNTA */
 .griglia-bottoni {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -133,7 +130,6 @@ button:hover {
   color: #312e81;
 }
 
-/* CARD EDITOR */
 .card-editor {
   border: 1px solid #cfd8e3;
   border-radius: 18px;
@@ -178,7 +174,6 @@ button:hover {
   background: #e0e7ff;
 }
 
-/* PULSANTE STAMPA */
 .bottone-stampa {
   width: 100%;
   font-weight: 700;
@@ -193,10 +188,6 @@ button:hover {
   background: linear-gradient(135deg, #4338ca, #4f46e5);
 }
 
-/* =========================
-   COLONNA DESTRA / ANTEPRIMA
-   SEMPRE BIANCA
-========================= */
 .area-anteprima {
   padding: 32px;
   overflow: auto;
@@ -213,9 +204,9 @@ button:hover {
   position: relative;
   page-break-after: always;
   border: 1px solid #e5e7eb;
+  break-inside: avoid;
 }
 
-/* HEADER DOCUMENTO */
 .intestazione {
   border: 1px solid #64748b;
   text-align: center;
@@ -235,7 +226,6 @@ button:hover {
   color: #475569;
 }
 
-/* TITOLO DOCUMENTO */
 .blocco-titolo {
   border: 1px solid #475569;
   text-align: center;
@@ -247,7 +237,6 @@ button:hover {
   color: #0f172a;
 }
 
-/* TESTO */
 .blocco-testo {
   margin: 16px 0;
   line-height: 1.6;
@@ -257,7 +246,6 @@ button:hover {
   background: #ffffff;
 }
 
-/* CAMPI */
 .campo-riga {
   display: flex;
   align-items: center;
@@ -278,7 +266,6 @@ button:hover {
   height: 20px;
 }
 
-/* CHECKBOX */
 .gruppo-caselle {
   display: flex;
   gap: 30px;
@@ -292,6 +279,7 @@ button:hover {
   height: 24px;
   border: 1px solid #111;
   background: #ffffff;
+  flex-shrink: 0;
 }
 
 .item-casella {
@@ -302,7 +290,6 @@ button:hover {
   background: #ffffff;
 }
 
-/* TABELLA */
 .tabella-documento {
   width: 100%;
   border-collapse: collapse;
@@ -322,7 +309,6 @@ button:hover {
   background: #ffffff;
 }
 
-/* NOTE */
 .area-note {
   border: 1px solid #111;
   padding: 12px;
@@ -342,7 +328,6 @@ button:hover {
   margin-bottom: 8px;
 }
 
-/* DATA */
 .campo-data {
   display: flex;
   align-items: center;
@@ -363,7 +348,6 @@ button:hover {
   height: 20px;
 }
 
-/* FIRMA */
 .campo-firma-wrap {
   display: flex;
   justify-content: flex-end;
@@ -388,7 +372,6 @@ button:hover {
   height: 24px;
 }
 
-/* NUMERO PAGINA */
 .numero-pagina {
   position: absolute;
   bottom: 20px;
@@ -398,7 +381,6 @@ button:hover {
   background: #ffffff;
 }
 
-/* MOBILE */
 @media (max-width: 1200px) {
   .app {
     grid-template-columns: 1fr;
@@ -410,10 +392,22 @@ button:hover {
   }
 }
 
-/* STAMPA */
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
 @media print {
+  html,
   body {
+    width: 210mm;
+    height: 297mm;
     background: white;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .no-print {
@@ -431,10 +425,23 @@ button:hover {
 
   .foglio {
     width: 100%;
-    margin: 0;
-    padding: 20px;
+    min-height: auto;
+    margin: 0 0 10mm 0;
+    padding: 12mm;
     box-shadow: none;
     border: none;
     background: white;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .foglio:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .numero-pagina {
+    bottom: 8mm;
+    right: 8mm;
   }
 }
